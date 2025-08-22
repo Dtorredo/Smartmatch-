@@ -13,11 +13,15 @@ export default function JobListings() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [user, setUser] = useState(null);
+  const [userLoading, setUserLoading] = useState(true);
   const navigate = useNavigate();
 
   /* auth listener */
   useEffect(() => {
-    const unsub = auth.onAuthStateChanged(setUser);
+    const unsub = auth.onAuthStateChanged(user => {
+      setUser(user);
+      setUserLoading(false);
+    });
     return unsub;
   }, []);
 
@@ -83,14 +87,20 @@ export default function JobListings() {
       {/* Header buttons */}
       <div className="header-buttons">
         <div style={{ display: "flex", gap: "0.5rem" }}>
-          <Link to="/profile" className="profile-link">
-            <button className="profile-button">Profile</button>
-          </Link>
+          {userLoading ? (
+            <div className="profile-button">Checking auth...</div>
+          ) : (
+            <>
+              <Link to="/profile" className="profile-link">
+                <button className="profile-button">Profile</button>
+              </Link>
 
-          {user && (
-            <button className="profile-button" onClick={handleLogout}>
-              Logout
-            </button>
+              {user && (
+                <button className="profile-button" onClick={handleLogout}>
+                  Logout
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>
