@@ -1,429 +1,194 @@
-// JobsList.js
+// JobListings.jsx
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { auth, db } from "../firebase";
-import { toast } from "react-hot-toast";
-import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
+import { db, auth } from "../firebase";
+import { signOut } from "firebase/auth";
+import { collection, getDocs } from "firebase/firestore";
+import { Link, useNavigate } from "react-router-dom";
+import { FaBriefcase, FaSearch, FaMapMarkerAlt, FaMoneyBillWave, FaClock, FaDownload } from "react-icons/fa";
 import { CSVLink } from "react-csv";
+import "./JobListings.css";
 
-export default function JobsList() {
+export default function JobListings() {
   const [jobs, setJobs] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
-  // Redirect if not logged in
+  /* auth listener */
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (!user) {
-        navigate("/login");
+    const unsub = auth.onAuthStateChanged(setUser);
+    return unsub;
+  }, []);
+
+  /* fetch jobs */
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        const snap = await getDocs(collection(db, "Jobs"));
+        const data = snap.docs.map((d) => ({
+          id: d.id,
+          ...d.data(),
+          createdAt: d.data().createdAt?.toDate?.()?.toISOString() || new Date(d.data().createdAt).toISOString(),
+        }));
+        setJobs(data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
       }
-    });
-    return () => unsubscribe();
-  }, [navigate]);
-
-  // Fetch jobs
-  const fetchJobs = async () => {
-    setIsLoading(true);
-    try {
-      const querySnapshot = await getDocs(collection(db, "Jobs"));
-      const jobsData = querySnapshot.docs.map((doc) => ({ 
-        id: doc.id, 
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate()?.toISOString() || new Date(doc.data().createdAt).toISOString()
-      }));
-      setJobs(jobsData);
-    } catch (error) {
-      toast.error("Failed to fetch jobs");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
+    };
     fetchJobs();
   }, []);
 
-  // Delete job
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this job?")) return;
-    
-    setIsLoading(true);
+  /* logout handler */
+  const handleLogout = async () => {
     try {
-      await deleteDoc(doc(db, "Jobs", id));
-      toast.success("Job deleted successfully!");
-      await fetchJobs();
-    } catch (error) {
-      toast.error("Failed to delete job");
-      setIsLoading(false);
+      await signOut(auth);
+      navigate("/login");
+    } catch (err) {
+      console.error("Logout error:", err);
     }
   };
 
-  // Prepare data for CSV
-  const csvData = jobs.map(job => ({
-    "Job Title": job.job_title,
-    "Company": job.job_company,
-    "Location": job.job_location,
-    "Salary": job.job_salary,
-    "Type": job.job_type,
-    "Description": job.job_description,
-    "Posted Date": new Date(job.createdAt).toLocaleDateString()
+  /* filter & CSV helpers */
+  const filteredJobs = jobs.filter(
+    (j) =>
+      j.job_title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      j.job_description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      j.job_company?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const csvData = filteredJobs.map((j) => ({
+    "Job Title": j.job_title,
+    Company: j.job_company,
+    Location: j.job_location,
+    Salary: j.job_salary,
+    Type: j.job_type,
+    Description: j.job_description,
+    "Posted Date": new Date(j.createdAt).toLocaleDateString(),
   }));
 
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+        <p>Loading job listings…</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="dashboard-container">
-      {/* Hamburger Menu (same as in PostJob) */}
-      <div style={{ position: "fixed", top: "2rem", left: "2.5rem", zIndex: 1000 }}>
-        <div style={{ position: "relative" }}>
-          <button
-            onClick={() => setMenuOpen((open) => !open)}
-            style={{
-              background: "#fff",
-              border: "1.5px solid #1976d2",
-              borderRadius: "8px", 
-              padding: "0.7rem",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              boxShadow: "0 4px 16px 0 rgba(25, 118, 210, 0.10)",
-              cursor: "pointer",
-              transition: "background 0.2s",
-              width: "44px",
-              height: "44px",
-            }}
-            aria-label="Open menu"
-          >
-            <span style={{ display: "block", width: "22px", height: "3px", background: "#1976d2", borderRadius: "2px", marginBottom: "4px" }} />
-            <span style={{ display: "block", width: "22px", height: "3px", background: "#1976d2", borderRadius: "2px", marginBottom: "4px" }} />
-            <span style={{ display: "block", width: "22px", height: "3px", background: "#1976d2", borderRadius: "2px" }} />
-          </button>
-          {menuOpen && (
-            <div style={{
-              position: "absolute",
-              left: 0,
-              marginTop: "0.7rem",
-              width: "180px",
-              background: "#fff",
-              border: "1.5px solid #e3e8ef",
-              borderRadius: "14px",
-              boxShadow: "0 8px 32px 0 rgba(25, 118, 210, 0.13)",
-              display: "flex",
-              flexDirection: "column",
-              overflow: "hidden"
-            }}>
-              <button
-                onClick={() => {
-                  setMenuOpen(false);
-                  navigate("/post-job");
-                }}
-                style={{
-                  padding: "1rem 1.5rem",
-                  background: "none",
-                  border: "none",
-                  textAlign: "left",
-                  color: "#1976d2",
-                  fontWeight: 600,
-                  fontSize: "1.05rem",
-                  cursor: "pointer",
-                  borderBottom: "1px solid #e3e8ef",
-                  transition: "background 0.2s",
-                }}
-                onMouseOver={e => e.currentTarget.style.background = "#f1f5fb"}
-                onMouseOut={e => e.currentTarget.style.background = "none"}
-              >
-                Post Job
-              </button>
-              <button
-                onClick={() => {
-                  setMenuOpen(false);
-                  navigate("/alljobs");
-                }}
-                style={{
-                  padding: "1rem 1.5rem",
-                  background: "none",
-                  border: "none",
-                  textAlign: "left",
-                  color: "#1976d2",
-                  fontWeight: 600,
-                  fontSize: "1.05rem",
-                  cursor: "pointer",
-                  borderBottom: "none",
-                  transition: "background 0.2s",
-                }}
-                onMouseOver={e => e.currentTarget.style.background = "#f1f5fb"}
-                onMouseOut={e => e.currentTarget.style.background = "none"}
-              >
-                View Jobs
-              </button>
-            </div>
+    <div className="job-listings-container">
+      {/* Header buttons */}
+      <div className="header-buttons">
+        <div style={{ display: "flex", gap: "0.5rem" }}>
+          <Link to="/profile" className="profile-link">
+            <button className="profile-button">Profile</button>
+          </Link>
+
+          {user && (
+            <button className="profile-button" onClick={handleLogout}>
+              Logout
+            </button>
           )}
         </div>
       </div>
-      
-      <div className="dashboard-card">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h2 className="dashboard-title">Posted Jobs</h2>
-          <CSVLink 
-            data={csvData} 
-            filename={"jobs-data.csv"}
-            className="download-button"
-            style={{
-              padding: "0.5rem 1rem",
-              background: "#10b981",
-              color: "white",
-              borderRadius: "6px",
-              textDecoration: "none",
-              fontWeight: 500,
-              display: "flex",
-              alignItems: "center",
-              gap: "0.5rem",
-              fontSize: "0.9rem"
-            }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="7 10 12 15 17 10"></polyline>
-              <line x1="12" y1="15" x2="12" y2="3"></line>
-            </svg>
-            Download Jobs List
-          </CSVLink>
+
+      {/* Page header */}
+      <div className="job-listings-header">
+        <h1>
+          <FaBriefcase className="header-icon" />
+          Current Job Openings
+        </h1>
+        <p className="subtitle">Find your next career opportunity</p>
+
+        <div className="search-container">
+          <FaSearch className="search-icon" />
+          <input
+            type="text"
+            placeholder="Search jobs by title, company or keywords..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="search-input"
+          />
         </div>
-        
-        {isLoading && jobs.length === 0 ? (
-          <div className="loading-indicator">Loading jobs...</div>
-        ) : jobs.length === 0 ? (
-          <div className="empty-state">
-            <svg className="empty-icon" viewBox="0 0 24 24">
-              <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
-            </svg>
-            <p>No jobs posted yet.</p>
+      </div>
+
+      {/* Job grid */}
+      <div className="job-listings-content">
+        {filteredJobs.length === 0 ? (
+          <div className="no-jobs-found">
+            {searchTerm ? (
+              <>
+                <h3>No jobs found matching your search</h3>
+                <p>Try different keywords or check back later.</p>
+              </>
+            ) : (
+              <>
+                <h3>No jobs posted yet</h3>
+                <p>Check back soon for new opportunities.</p>
+              </>
+            )}
           </div>
         ) : (
-          <div className="jobs-list">
-            {jobs.map((job) => (
-              <div key={job.id} className="job-card">
-                <div className="job-header">
-                  <div>
-                    <h4 className="job-title">{job.job_title}</h4>
-                    <p className="job-company">{job.job_company} • {job.job_location}</p>
+          <div className="jobs-grid">
+            {filteredJobs.map((job) => (
+              <Link to={`/job-details/${job.id}`} key={job.id} className="job-card-link">
+                <div className="job-card">
+                  <div className="job-card-header">
+                    <h3>{job.job_title}</h3>
+                    {job.job_company && <p className="company">{job.job_company}</p>}
                   </div>
+
+                  {job.job_description && (
+                    <p className="job-description">
+                      {job.job_description.length > 120
+                        ? `${job.job_description.substring(0, 120)}…`
+                        : job.job_description}
+                    </p>
+                  )}
+
                   <div className="job-meta">
-                    <span className="job-salary">{job.job_salary}</span>
-                    <span className="job-type">{job.job_type}</span>
-                    <div className="job-date">
-                      {new Date(job.createdAt).toLocaleDateString()}
-                    </div>
+                    {job.job_location && (
+                      <div className="meta-item">
+                        <FaMapMarkerAlt className="meta-icon" />
+                        <span>{job.job_location}</span>
+                      </div>
+                    )}
+                    {job.job_salary && (
+                      <div className="meta-item">
+                        <FaMoneyBillWave className="meta-icon" />
+                        <span>{job.job_salary}</span>
+                      </div>
+                    )}
+                    {job.job_type && (
+                      <div className="meta-item">
+                        <FaClock className="meta-icon" />
+                        <span>{job.job_type}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="view-details">
+                    View Details <span className="arrow">→</span>
                   </div>
                 </div>
-                <p className="job-description">{job.job_description}</p>
-                <div className="job-actions">
-                  
-                </div>
-              </div>
+              </Link>
             ))}
           </div>
         )}
       </div>
-      
-      {/* Logout Button (same as in PostJob) */}
-      <button
-        onClick={() => {
-          auth.signOut();
-          navigate("/login");
-        }}
-        style={{
-          position: "fixed",
-          top: "2rem",
-          right: "2.5rem",
-          background: "rgba(220,38,38,0.15)", 
-          color: "#413d3dff",
-          border: "none",
-          borderRadius: "999px",
-          padding: "0.75rem 2rem",
-          fontWeight: 600,
-          fontSize: "1.05rem",
-          cursor: "pointer",
-          boxShadow: "0 4px 16px 0 rgba(220,38,38,0.10)",
-          transition: "background 0.2s, color 0.2s",
-          zIndex: 1100,
-          backdropFilter: "blur(2px)",
-        }}
-        onMouseOver={e => {
-          e.currentTarget.style.background = "#f65656ff";
-          e.currentTarget.style.color = "#fff";
-        }}
-        onMouseOut={e => {
-          e.currentTarget.style.background = "rgba(222, 169, 169, 0.15)";
-          e.currentTarget.style.color = "#676161ff";
-        }}
-      >
-        Log Out
-      </button>
 
-      <style jsx>{`
-        .dashboard-container {
-          min-height: 100vh;
-          display: flex;
-          align-items: flex-start;
-          justify-content: center;
-          background: #f8fafc;
-          padding: 2rem 1rem;
-        }
-        
-        .dashboard-card {
-          background: #fff;
-          padding: 2.5rem;
-          border-radius: 12px;
-          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 10px 15px rgba(0, 0, 0, 0.1);
-          width: 100%;
-          max-width: 800px;
-          display: flex;
-          flex-direction: column;
-          gap: 2rem;
-        }
-        
-        .dashboard-title {
-          color: #1e293b;
-          margin: 0;
-          font-size: 1.75rem;
-          font-weight: 600;
-        }
-        
-        .jobs-list {
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-        }
-        
-        .job-card {
-          background: white;
-          border: 1px solid #e2e8f0;
-          border-radius: 8px;
-          padding: 1.25rem;
-          transition: transform 0.2s, box-shadow 0.2s;
-        }
-        
-        .job-card:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        }
-        
-        .job-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          margin-bottom: 0.75rem;
-          gap: 1rem;
-        }
-        
-        .job-title {
-          margin: 0;
-          color: #1e293b;
-          font-size: 1.125rem;
-          font-weight: 600;
-        }
-        
-        .job-company {
-          margin: 0.25rem 0 0;
-          color: #64748b;
-          font-size: 0.875rem;
-        }
-        
-        .job-meta {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-end;
-          gap: 0.25rem;
-        }
-        
-        .job-salary {
-          font-weight: 600;
-          color: #1e293b;
-          font-size: 0.875rem;
-        }
-        
-        .job-type {
-          background: #e0e7ff;
-          color: #4f46e5;
-          padding: 0.25rem 0.5rem;
-          border-radius: 4px;
-          font-size: 0.75rem;
-          font-weight: 500;
-        }
-        
-        .job-date {
-          font-size: 0.75rem;
-          color: #64748b;
-        }
-        
-        .job-description {
-          margin: 0.5rem 0 1rem;
-          color: #475569;
-          font-size: 0.9375rem;
-          line-height: 1.5;
-        }
-        
-        .job-actions {
-          display: flex;
-          gap: 0.75rem;
-          justify-content: flex-end;
-        }
-        
-        .action-button {
-          padding: 0.5rem 1rem;
-          border-radius: 4px;
-          font-size: 0.875rem;
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.2s;
-          border: 1px solid transparent;
-        }
-        
-        .action-button.edit {
-          background-color: #e0e7ff;
-          color: #4f46e5;
-        }
-        
-        .action-button.edit:hover {
-          background-color: #c7d2fe;
-        }
-        
-        .action-button.delete {
-          background-color: #fee2e2;
-          color: #dc2626;
-        }
-        
-        .action-button.delete:hover {
-          background-color: #fecaca;
-        }
-        
-        .loading-indicator {
-          padding: 1rem;
-          text-align: center;
-          color: #64748b;
-        }
-        
-        .empty-state {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          gap: 1rem;
-          padding: 2rem;
-          background: #f8fafc;
-          border-radius: 8px;
-          border: 1px dashed #cbd5e1;
-          color: #64748b;
-          text-align: center;
-        }
-        
-        .empty-icon {
-          width: 48px;
-          height: 48px;
-          fill: #cbd5e1;
-        }
-      `}</style>
+      {/* Download CSV */}
+      {filteredJobs.length > 0 && (
+        <div style={{ textAlign: "center", marginTop: "2rem" }}>
+          <CSVLink data={csvData} filename="job-listings.csv" className="download-button">
+            <FaDownload className="download-icon" />
+            Download Jobs List
+          </CSVLink>
+        </div>
+      )}
     </div>
   );
 }

@@ -111,13 +111,15 @@ export default function Profile() {
       </div>
       <style>{`
         .profile-container {
-          min-height: 100vh;
           display: flex;
+          flex-direction: column; /* Changed to column to allow padding-top to work as expected */
           justify-content: center;
           align-items: center;
           padding: 2rem;
+          padding-top: 80px; /* Add padding to account for Navbar height */
           background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
           font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          min-height: calc(100vh - 80px); /* Adjust min-height to account for Navbar */
         }
         .profile-card {
           background: white;

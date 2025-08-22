@@ -1,0 +1,10 @@
+.footer-container {
+  width: 100%;
+  background: #2c3e50;
+  color: white;
+  padding: 2rem;
+}
+
+.footer-bottom {
+  text-align: center;
+}

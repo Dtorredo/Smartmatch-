@@ -1,0 +1,229 @@
+
+.home-container {
+  padding-top: 80px;
+}
+
+.hero-container {
+  position: relative;
+  width: 100%;
+  padding: 4rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f5f7fa;
+  color: #2c3e50;
+  text-align: center;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 2rem;
+  max-width: 800px;
+}
+
+.hero-content h1 {
+  font-size: 3.5rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+.hero-content p {
+  font-size: 1.5rem;
+  font-weight: 300;
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+.hero-button {
+  display: inline-block;
+  padding: 1rem 2.5rem;
+  background: #1976d2;
+  color: white;
+  border-radius: 30px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1.1rem;
+  box-shadow: 0 4px 15px rgba(25, 118, 210, 0.4);
+  transition: all 0.3s ease;
+  margin-top: 1rem;
+}
+
+.hero-button:hover {
+  background: #1565c0;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(25, 118, 210, 0.5);
+}
+
+.job-listings-container {
+  width: 100%;
+  padding: 4rem 2rem;
+  background: white;
+  transform: translateY(-50px);
+  border-radius: 30px 30px 0 0;
+  box-shadow: 0 -10px 30px rgba(0,0,0,0.05);
+}
+
+.job-listings-container h2 {
+  font-size: 2.2rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.job-listings-container > p {
+  color: #7f8c8d;
+  font-size: 1.1rem;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.job-search {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.job-search input {
+  padding: 0.8rem;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  width: 50%;
+  max-width: 500px;
+  font-size: 1rem;
+}
+
+.loader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+}
+
+.loader > div {
+  width: 50px;
+  height: 50px;
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid #1976d2;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.no-jobs {
+  text-align: center;
+  padding: 3rem;
+  background: #f9f9f9;
+  border-radius: 15px;
+}
+
+.no-jobs p {
+  font-size: 1.2rem;
+  color: #7f8c8d;
+}
+
+.job-cards-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.job-card {
+  background: white;
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+  border: 1px solid #eee;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.job-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  border-color: #1976d2;
+}
+
+.job-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.job-card h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+
+.job-card .company {
+  color: #1976d2;
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+.job-card .location, .job-card .salary {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.8rem;
+}
+
+.job-card .location span:first-child, .job-card .salary span:first-child {
+  margin-right: 0.5rem;
+  color: #7f8c8d;
+}
+
+.job-card .location span:last-child, .job-card .salary span:last-child {
+  color: #34495e;
+}
+
+.job-card .details {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.job-card .job-type {
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.job-card .view-details {
+  color: #1976d2;
+  font-weight: 600;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.job-card .view-details:hover {
+  color: #0d47a1;
+}
+
+.job-card .view-details span {
+  margin-left: 0.3rem;
+}
+
+.footer-container {
+  width: 100%;
+  padding: 2rem;
+  background: #2c3e50;
+  color: white;
+  text-align: center;
+}

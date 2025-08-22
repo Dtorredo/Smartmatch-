@@ -36,3 +36,7 @@
     transform: rotate(360deg);
   }
 }
+
+.main-content-no-navbar {
+  padding-top: 80px; /* Compensate for Navbar height when it's not shown */
+}
