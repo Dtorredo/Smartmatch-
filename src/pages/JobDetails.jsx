@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { db } from "../firebase";
 import { doc, getDoc } from "firebase/firestore";
-import { FaMapMarkerAlt, FaMoneyBillWave, FaClock, FaArrowLeft, FaCheckCircle } from "react-icons/fa";
+import { FaMapMarkerAlt, FaMoneyBillWave, FaClock, FaArrowLeft } from "react-icons/fa";
 import "./JobDetails.css";
 
 export default function JobDetails() {
@@ -10,7 +10,6 @@ export default function JobDetails() {
   const navigate = useNavigate();
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [applied, setApplied] = useState(false);
 
   useEffect(() => {
     const fetchJob = async () => {
@@ -117,17 +116,9 @@ export default function JobDetails() {
         </div>
 
         <div className="apply-section">
-          {applied ? (
-            <div className="applied-message">
-              <FaCheckCircle className="success-icon" />
-              <span>Application Submitted!</span>
-              <p>We've received your application for this position.</p>
-            </div>
-          ) : (
-            <button onClick={handleSubmit} className="apply-button">
-              Apply For This Position
-            </button>
-          )}
+          <button onClick={handleSubmit} className="apply-button">
+            Apply For This Position
+          </button>
         </div>
       </div>
     </div>
